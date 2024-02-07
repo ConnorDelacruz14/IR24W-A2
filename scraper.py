@@ -1,20 +1,25 @@
 import re
 from urllib.parse import urlparse
 
+
+ALLOWED_DOMAINS = [
+            'ics.uci.edu',
+            'cs.uci.edu',
+            'informatics.uci.edu',
+            'stat.uci.edu'
+        ]
+
 def scraper(url, resp):
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
 
 def extract_next_links(url, resp):
-    # Implementation required.
-    # url: the URL that was used to get the page
-    # resp.url: the actual url of the page
-    # resp.status: the status code returned by the server. 200 is OK, you got the page. Other numbers mean that there was some kind of problem.
-    # resp.error: when status is not 200, you can check the error here, if needed.
+    # Implementation required. url: the URL that was used to get the page resp.url: the actual url of the page
+    # resp.status: the status code returned by the server. 200 is OK, you got the page. Other numbers mean that there
+    # was some kind of problem. resp.error: when status is not 200, you can check the error here, if needed.
     # resp.raw_response: this is where the page actually is. More specifically, the raw_response has two parts:
-    #         resp.raw_response.url: the url, again
-    #         resp.raw_response.content: the content of the page!
-    # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
+    # resp.raw_response.url: the url, again resp.raw_response.content: the content of the page! Return a list with
+    # the hyperlinks (as strings) scrapped from resp.raw_response.content
     return list()
 
 def is_valid(url):
@@ -23,8 +28,15 @@ def is_valid(url):
     # There are already some conditions that return False.
     try:
         parsed = urlparse(url)
+
         if parsed.scheme not in set(["http", "https"]):
             return False
+        
+        domain_matches = any(domain for domain in ALLOWED_DOMAINS if parsed.netloc.endswith(domain))
+        
+        if not domain_matches:
+            return False
+
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
@@ -38,3 +50,13 @@ def is_valid(url):
     except TypeError:
         print ("TypeError for ", parsed)
         raise
+
+
+if __name__ == "__main__":
+    print(is_valid("https://canvas.eee.uci.edu/courses/61501/assignments/1312395"), "| ", "Expected: False")
+    print(is_valid("https://ics.uci.edu/~dillenco/compsci161/readings/"), "| " "Expected: True")
+    print(is_valid("https://computer_science.ics.uci.edu/~dillenco/compsci161/readings/"), "| ", "Expected: True")
+    print(is_valid("youtube.com"), "| ", "Expected: False")
+    print(is_valid("https://youtube.com"), "| ", "Expected: False")
+    print(is_valid("https://stat.uci.edu"), "| ", "Expected: True")
+    print(is_valid("https://stat.uci.edu/pages"), "| ", "Expected: True")
