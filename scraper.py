@@ -1,6 +1,6 @@
 import re
 from urllib.parse import urlparse
-
+from bs4 import BeautifulSoup
 
 ALLOWED_DOMAINS = [
             'ics.uci.edu',
@@ -20,7 +20,16 @@ def extract_next_links(url, resp):
     # resp.raw_response: this is where the page actually is. More specifically, the raw_response has two parts:
     # resp.raw_response.url: the url, again resp.raw_response.content: the content of the page! Return a list with
     # the hyperlinks (as strings) scrapped from resp.raw_response.content
-    return list()
+    if resp.status != 200:
+        return list()
+
+    soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+
+    links = [link.get('href') for link in soup.find_all('a', href=True)]
+    for href in links:
+        print(href)
+
+    return links
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
@@ -52,6 +61,7 @@ def is_valid(url):
 
 
 if __name__ == "__main__":
-    print(is_valid("https://canvas.eee.uci.edu/courses/61501/assignments/1312395"), "Expected: False")
-    print(is_valid("https://ics.uci.edu/~dillenco/compsci161/readings/"), "Expected: True")
-    print(is_valid("https://computer_science.ics.uci.edu/~dillenco/compsci161/readings/"), "Expected: True")
+    url = "https://ics.uci.edu/~dillenco/compsci161/readings/"
+    print(is_valid(url), "Expected: True")
+    print(extract_next_links(url))
+
