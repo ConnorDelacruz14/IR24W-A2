@@ -28,23 +28,30 @@ def is_valid(url):
          # Extract the hostname from the parsed URL
         hostname = parsed.hostname
         
-        # Define the regular expression pattern to match the specified domains
-        domain_pattern = r"\.(?:ics|cs|informatics|stat)\.uci\.edu"
+        allowed_hostnames = r"(?:ics|cs|informatics|stat)\.uci\.edu$"
         
         # Use re.match to check if the hostname matches the domain pattern
-        if re.match(domain_pattern, hostname):
+        if re.search(allowed_hostnames, hostname): 
             return not re.match(
-            r".*\.(css|js|bmp|gif|jpe?g|ico"
-            + r"|png|tiff?|mid|mp2|mp3|mp4"
-            + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
-            + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
-            + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
-            + r"|epub|dll|cnf|tgz|sha1"
-            + r"|thmx|mso|arff|rtf|jar|csv"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
-        
+                r".*\.(css|js|bmp|gif|jpe?g|ico"
+                + r"|png|tiff?|mid|mp2|mp3|mp4"
+                + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
+                + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
+                + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
+                + r"|epub|dll|cnf|tgz|sha1"
+                + r"|thmx|mso|arff|rtf|jar|csv"
+                + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
         return False
 
     except TypeError:
         print ("TypeError for ", parsed)
         raise
+
+if __name__ == "__main__":
+    print(is_valid("https://canvas.eee.uci.edu/courses/61501/assignments/1312395"), "| ", "Expected: False")
+    print(is_valid("https://ics.uci.edu/~dillenco/compsci161/readings/"), "| " "Expected: True")
+    print(is_valid("https://computer_science.ics.uci.edu/~dillenco/compsci161/readings/"), "| ", "Expected: True")
+    print(is_valid("youtube.com"), "| ", "Expected: False")
+    print(is_valid("https://youtube.com"), "| ", "Expected: False")
+    print(is_valid("https://stat.uci.edu"), "| ", "Expected: True")
+    print(is_valid("https://stat.uci.edu/pages"), "| ", "Expected: True")
