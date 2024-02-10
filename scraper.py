@@ -1,6 +1,6 @@
 import re
-from urllib.parse import urlparse
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse, urljoin
 
 ALLOWED_DOMAINS = [
             'ics.uci.edu',
@@ -10,8 +10,8 @@ ALLOWED_DOMAINS = [
         ]
 
 def scraper(url, resp):
-    links = extract_next_links(url, resp)
-    return [link for link in links if is_valid(link)]
+    return extract_next_links(url, resp)
+
 
 def extract_next_links(url, resp):
     # Implementation required. url: the URL that was used to get the page resp.url: the actual url of the page
@@ -21,13 +21,25 @@ def extract_next_links(url, resp):
     # resp.raw_response.url: the url, again resp.raw_response.content: the content of the page! Return a list with
     # the hyperlinks (as strings) scrapped from resp.raw_response.content
     if resp.status != 200:
+        print(f"Error code {resp.status}")
         return list()
 
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
 
-    links = [link.get('href') for link in soup.find_all('a', href=True)]
-    for href in links:
-        print(href)
+    # for string in soup.stripped_strings:
+    #     print(string)
+
+    links = []
+
+    for link in soup.find_all('a', href=True):
+        href = link.get('href')
+        # Create an absolute URL from a possible relative URL and the base URL
+        absolute_url = urljoin(url, href)
+        parsed_url = urlparse(absolute_url)
+        # Reconstruct the URL without the fragment
+        defragmented_url = parsed_url._replace(fragment="").geturl()
+        if is_valid(defragmented_url):
+            links.append(defragmented_url)
 
     return links
 
@@ -38,6 +50,7 @@ def is_valid(url):
     try:
         parsed = urlparse(url)
 
+        # Only allow subdomains and domains that are allowed
         domain_matches = any(domain for domain in ALLOWED_DOMAINS if parsed.netloc.endswith(domain))
         if not domain_matches:
             return False
@@ -63,5 +76,4 @@ def is_valid(url):
 if __name__ == "__main__":
     url = "https://ics.uci.edu/~dillenco/compsci161/readings/"
     print(is_valid(url), "Expected: True")
-    print(extract_next_links(url))
 
