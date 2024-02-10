@@ -1,5 +1,9 @@
+from pickle import TRUE
 import re
+from typing import Any
+from urllib import response
 from urllib.parse import urlparse
+from bs4 import BeautifulSoup
 
 
 ALLOWED_DOMAINS = [
@@ -20,6 +24,28 @@ def extract_next_links(url, resp):
     # resp.raw_response: this is where the page actually is. More specifically, the raw_response has two parts:
     # resp.raw_response.url: the url, again resp.raw_response.content: the content of the page! Return a list with
     # the hyperlinks (as strings) scrapped from resp.raw_response.content
+    
+    
+    
+    hyperlinksExtracted = []
+
+    if resp.status == 200:
+        print(f" Current URL: {url}")
+        
+        BS = BeautifulSoup(resp.raw_response.content, 'html.parser')
+        
+        
+        a_tags = BS.find_all('a', href = TRUE)
+
+
+        hyperlinksExtracted = [tag.get('href') for tag in a_tags]
+        
+        return hyperlinksExtracted
+    else:
+        
+        return hyperlinksExtracted
+    
+    
     return list()
 
 def is_valid(url):
@@ -60,3 +86,9 @@ if __name__ == "__main__":
     print(is_valid("https://youtube.com"), "| ", "Expected: False")
     print(is_valid("https://stat.uci.edu"), "| ", "Expected: True")
     print(is_valid("https://stat.uci.edu/pages"), "| ", "Expected: True")
+    print(is_valid("stat.uci.edu/pages"), "| ", "Expected: False")
+    print(is_valid("https://stat.uci.edu/pages"), "| ", "Expected: True")
+
+    
+
+    
