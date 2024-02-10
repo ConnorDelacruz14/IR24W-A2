@@ -76,4 +76,4 @@ def is_valid(url):
 if __name__ == "__main__":
     url = "https://ics.uci.edu/~dillenco/compsci161/readings/"
     print(is_valid(url), "Expected: True")
-
+    print("Connor is cringe")
