@@ -1,5 +1,6 @@
 import re
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
+from bs4 import BeautifulSoup
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -15,7 +16,24 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-    return list()
+    
+    if resp.status == 200:
+        print(f"{url} is OK.")
+        # Parse the HTML content using BeautifulSoup
+        soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+        # Find all anchor tags (hyperlinks)
+        anchor_tags = soup.find_all('a', href = True)
+        # Extract the href attribute from each anchor tag
+        hyperlinks = []
+        for link in anchor_tags:
+            abs_url = urljoin(url, link.get('href'))
+            final_url = urlparse(abs_url)._replace(fragment="").geturl()
+            if (is_valid(final_url)) :
+                hyperlinks.append(final_url)
+        return hyperlinks
+    else:
+        print(f"{url} has {resp.error}")
+        return []
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
@@ -46,12 +64,3 @@ def is_valid(url):
     except TypeError:
         print ("TypeError for ", parsed)
         raise
-
-if __name__ == "__main__":
-    print(is_valid("https://canvas.eee.uci.edu/courses/61501/assignments/1312395"), "| ", "Expected: False")
-    print(is_valid("https://ics.uci.edu/~dillenco/compsci161/readings/"), "| " "Expected: True")
-    print(is_valid("https://computer_science.ics.uci.edu/~dillenco/compsci161/readings/"), "| ", "Expected: True")
-    print(is_valid("youtube.com"), "| ", "Expected: False")
-    print(is_valid("https://youtube.com"), "| ", "Expected: False")
-    print(is_valid("https://stat.uci.edu"), "| ", "Expected: True")
-    print(is_valid("https://stat.uci.edu/pages"), "| ", "Expected: True")
