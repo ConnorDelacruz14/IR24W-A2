@@ -1,16 +1,17 @@
 import re
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse, urljoin
+from parser import Parser
+from urllib.parse import urlparse
 
 ALLOWED_DOMAINS = [
-            'ics.uci.edu',
-            'cs.uci.edu',
-            'informatics.uci.edu',
-            'stat.uci.edu'
-        ]
+    'ics.uci.edu',
+    'cs.uci.edu',
+    'informatics.uci.edu',
+    'stat.uci.edu'
+]
+
 
 def scraper(url, resp):
-    return extract_next_links(url, resp)
+    return [link for link in extract_next_links(url, resp) if is_valid(link)]
 
 
 def extract_next_links(url, resp):
@@ -24,27 +25,14 @@ def extract_next_links(url, resp):
         print(f"Error code {resp.status}")
         return list()
 
-    soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+    extractor = Parser(url, resp.raw_response.content)
+    print("Pages parsed:", Parser.pages_parsed)
 
-    # for string in soup.stripped_strings:
-    #     print(string)
+    return extractor.get_links_from_webpage()
 
-    links = []
-
-    for link in soup.find_all('a', href=True):
-        href = link.get('href')
-        # Create an absolute URL from a possible relative URL and the base URL
-        absolute_url = urljoin(url, href)
-        parsed_url = urlparse(absolute_url)
-        # Reconstruct the URL without the fragment
-        defragmented_url = parsed_url._replace(fragment="").geturl()
-        if is_valid(defragmented_url):
-            links.append(defragmented_url)
-
-    return links
 
 def is_valid(url):
-    # Decide whether to crawl this url or not. 
+    # Decide whether to crawl this url or not.
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
     try:
@@ -55,7 +43,7 @@ def is_valid(url):
         if not domain_matches:
             return False
 
-        if parsed.scheme not in set(["http", "https"]):
+        if parsed.scheme not in {"http", "https"}:
             return False
 
         return not re.match(
@@ -69,11 +57,5 @@ def is_valid(url):
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 
     except TypeError:
-        print ("TypeError for ", parsed)
+        print("TypeError for ", parsed)
         raise
-
-
-if __name__ == "__main__":
-    url = "https://ics.uci.edu/~dillenco/compsci161/readings/"
-    print(is_valid(url), "Expected: True")
-    print("Connor is cringe")
