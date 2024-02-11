@@ -2,6 +2,7 @@ import re
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
 from textProcessing import tokenize, computeWordFrequencies, printFrequencies, intersection
+import tokenparser
 
 ALLOWED_DOMAINS = [
             'ics.uci.edu',
@@ -29,7 +30,12 @@ def extract_next_links(url, resp):
     plain_text = soup.get_text(separator='\n')
     tokens = tokenize(plain_text)
     keys = computeWordFrequencies(tokens)
-    printFrequencies(keys)
+    #printFrequencies(keys)
+    tokenparser.parser_var.update_uniquePages(url)
+    print(f'Unique Pages: {tokenparser.parser_var.unique_pages}')
+    print(f'Longest Page: {tokenparser.parser_var.longest_page}')
+    print(f'Common Words: {tokenparser.parser_var.common_words}')
+
     #print(f'tokenize is {keys}')
 
     # for string in soup.stripped_strings:
