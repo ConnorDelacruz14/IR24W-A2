@@ -1,6 +1,7 @@
 import re
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
+from textProcessing import tokenize, computeWordFrequencies, printFrequencies, intersection
 
 ALLOWED_DOMAINS = [
             'ics.uci.edu',
@@ -25,11 +26,17 @@ def extract_next_links(url, resp):
         return list()
 
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+    plain_text = soup.get_text(separator='\n')
+    tokens = tokenize(plain_text)
+    keys = computeWordFrequencies(tokens)
+    printFrequencies(keys)
+    #print(f'tokenize is {keys}')
 
     # for string in soup.stripped_strings:
     #     print(string)
 
     links = []
+    #print(f'soup text is {plain_text}')
 
     for link in soup.find_all('a', href=True):
         href = link.get('href')
