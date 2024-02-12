@@ -27,7 +27,7 @@ def extract_next_links(url, resp):
 
     extractor = Parser(url, resp.raw_response.content)
     print("Pages parsed:", Parser.pages_parsed)
-
+    print(resp.raw_response.url)
     return extractor.get_links_from_webpage()
 
 

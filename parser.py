@@ -30,9 +30,23 @@ class Parser:
 
         return self.page_links
 
+    def get_politeness_information(self) -> dict:
+        parsed_url = urlparse(self.url)
+        robot_path = f"{parsed_url.scheme}://{parsed_url.netloc}/robots.txt"
+        politeness_dict = {}
+        
+        return url
+
     def tokenize_web_text(self) -> list:
         page_text = self.soup.get_text()
         self.tokens = tokenizer.tokenize([line.strip() for line in page_text.split('\n') if line.strip()],
                                          stopwords=True)
 
         return self.tokens
+
+if __name__ == "__main__":
+    url = 'http://url.something.com/bla.html?querystring=stuff'
+    parsed_url = urlparse(url)
+    print(parsed_url)
+    url_without_query_string = f"{parsed_url.scheme}://{parsed_url.netloc}"
+    print(url_without_query_string)
