@@ -31,10 +31,14 @@ def extract_next_links(url, resp):
     tokens = tokenize(plain_text)
     keys = computeWordFrequencies(tokens)
     #printFrequencies(keys)
-    tokenparser.parser_var.update_uniquePages(url)
-    print(f'Unique Pages: {tokenparser.parser_var.unique_pages}')
-    print(f'Longest Page: {tokenparser.parser_var.longest_page}')
-    print(f'Common Words: {tokenparser.parser_var.common_words}')
+    obj = tokenparser.Parser(url, tokens, keys)
+    #print(f'URL: {url}')
+    #print(f'Unique Pages Set: {obj.unique_pages_set}')
+    #print(f'Unique Pages: {obj.unique_pages}')
+    #print(f'Longest Page: {obj.longest_page}')
+    #print(f'Common Words Length: {len(obj.common_words)}')
+    
+    print(f'Subdomain is : {obj.subdomain}')
 
     #print(f'tokenize is {keys}')
 
