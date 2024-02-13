@@ -21,6 +21,7 @@ class Parser:
         self.tokens = []
 
     def get_links_from_webpage(self) -> list:
+        disallowed_links = self.get_politeness_information()['Disallow']
         for link in self.soup.find_all('a', href=True):
             href = link.get('href')
             # Create an absolute URL from a possible relative URL and the base URL
@@ -28,8 +29,10 @@ class Parser:
             parsed_url = urlparse(absolute_url)
             # Reconstruct the URL without the fragment
             defragmented_url = parsed_url._replace(fragment="").geturl()
-            self.page_links.append(defragmented_url)
-
+            if defragmented_url not in disallowed_links:
+                self.page_links.append(defragmented_url)
+            else: 
+                continue
         return self.page_links
 
     def get_politeness_information(self) -> dict:
@@ -39,7 +42,7 @@ class Parser:
         '''
         parsed_url = urlparse(self.url)
         main_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
-        if main_url not in politeness:
+        if main_url not in Parser.politeness:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             robot_path = f"{main_url}/robots.txt"
             robot_content = requests.get(robot_path, verify=False).text.split('\n')
@@ -56,15 +59,14 @@ class Parser:
                         parsed_dict['Sitemap'] = value
                 else:
                     continue
-            politeness[main_url] = parsed_dict
+            Parser.politeness[main_url] = parsed_dict
             return parsed_dict
         else:
-            return politeness[main_url]
+            return Parser.politeness[main_url]
 
     def tokenize_web_text(self) -> list:
         page_text = self.soup.get_text()
         self.tokens = tokenizer.tokenize([line.strip() for line in page_text.split('\n') if line.strip()],
                                          stopwords=True)
-
         return self.tokens
     
