@@ -27,8 +27,12 @@ def extract_next_links(url, resp):
 
     extractor = Parser(url, resp.raw_response.content)
     page_tokens = extractor.tokenize_web_text()
+    if (len(page_tokens)) < 100:
+        return list()
+    
     Parser.all_tokens.extend(page_tokens)
-
+    extractor.update_unique_pages()
+    extractor.update_subdomain()
 
     return extractor.get_links_from_webpage()
 

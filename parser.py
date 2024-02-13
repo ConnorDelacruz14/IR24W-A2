@@ -1,15 +1,16 @@
 import tokenizer
+import re
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
 
 
 class Parser:
     pages_parsed = 0
-    unique_pages = 0
+    unique_pages = set()
     all_tokens = []
     all_frequencies = {}  # all frequencies of words ignoring english stopwords
-    longest_page = ("", 0)     # {"URL": total_words}
-    subdomains = {}       # {"http://vision.ics.uci.edu": 10}
+    longest_page = ("", 0)  # {"URL": total_words}
+    subdomains = {}  # {"http://vision.ics.uci.edu": 10}
 
     def __init__(self, url: str, content: str) -> None:
         Parser.pages_parsed += 1
@@ -41,6 +42,19 @@ class Parser:
     def get_word_frequencies(self) -> dict:
         return tokenizer.compute_word_frequencies(self.tokens)
 
+    def update_unique_pages(self):
+        if self.url not in self.unique_pages:
+            Parser.unique_pages.add(self.url)
+
+    def update_subdomain(self):
+        sub = re.match(r'^.*\.ics.uci.edu', self.url)
+        if sub is not None:
+            word = sub.group(0)
+            if word in Parser.subdomains.items():
+                Parser.subdomains[word] += 1
+            else:
+                Parser.subdomains[word] = 1
+
     @staticmethod
     def get_all_word_frequencies() -> dict:
         with open("stopwords.txt", 'r') as stopwords_file:
@@ -60,7 +74,7 @@ class Parser:
     @staticmethod
     def print_crawler_report() -> None:
         print("Total pages parsed:", Parser.pages_parsed)
-        print("Total unique pages:", Parser.unique_pages)
+        print(f"Unique pages: {len(Parser.unique_pages)}")
         print("All word frequencies:")
         for word, count in Parser.get_all_word_frequencies().items():
             print(word, count)
