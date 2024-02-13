@@ -6,9 +6,10 @@ from urllib.parse import urlparse, urljoin
 class Parser:
     pages_parsed = 0
     unique_pages = 0
-    all_tokens = 0     # ignoring english stopwords
-    longest_page = {}  # {"URL": total_words}
-    subdomains = {}    # {"http://vision.ics.uci.edu": 10}
+    all_tokens = []
+    all_frequencies = {}  # all frequencies of words ignoring english stopwords
+    longest_page = ("", 0)     # {"URL": total_words}
+    subdomains = {}       # {"http://vision.ics.uci.edu": 10}
 
     def __init__(self, url: str, content: str) -> None:
         Parser.pages_parsed += 1
@@ -32,7 +33,36 @@ class Parser:
 
     def tokenize_web_text(self) -> list:
         page_text = self.soup.get_text()
-        self.tokens = tokenizer.tokenize([line.strip() for line in page_text.split('\n') if line.strip()],
-                                         stopwords=True)
-
+        self.tokens = tokenizer.tokenize([line.strip() for line in page_text.split('\n') if line.strip()])
+        if len(self.tokens) > Parser.longest_page[1]:
+            Parser.longest_page = (self.url, len(self.tokens))
         return self.tokens
+
+    def get_word_frequencies(self) -> dict:
+        return tokenizer.compute_word_frequencies(self.tokens)
+
+    @staticmethod
+    def get_all_word_frequencies() -> dict:
+        with open("stopwords.txt", 'r') as stopwords_file:
+            stopwords = set(word.strip() for word in stopwords_file.readlines())
+            word_frequencies = tokenizer.compute_word_frequencies(Parser.all_tokens)
+            sorted_frequencies = tokenizer.print_frequencies(word_frequencies)
+            return {word: frequency for word, frequency in sorted_frequencies.items() if word not in stopwords}
+
+    @staticmethod
+    def get_subdomains() -> dict:
+        return Parser.subdomains
+
+    @staticmethod
+    def get_longest_page() -> dict:
+        return Parser.longest_page
+
+    @staticmethod
+    def print_crawler_report() -> None:
+        print("Total pages parsed:", Parser.pages_parsed)
+        print("Total unique pages:", Parser.unique_pages)
+        print("All word frequencies:")
+        for word, count in Parser.get_all_word_frequencies().items():
+            print(word, count)
+        print(f"Longest page was {Parser.get_longest_page()[0]} with {Parser.get_longest_page()[1]} words")
+        print("Subdomains:", Parser.subdomains)
