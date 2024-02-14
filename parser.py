@@ -22,7 +22,9 @@ class Parser:
 
     def get_links_from_webpage(self) -> list:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        disallowed_links = self.get_politeness_information()['Disallow']
+        pln = self.get_politeness_information()
+        disallowed_links = pln['Disallow']
+        allowed_links = pln['Allow']
         for link in self.soup.find_all('a', href=True):
             href = link.get('href')
             # Create an absolute URL from a possible relative URL and the base URL
@@ -30,11 +32,12 @@ class Parser:
             parsed_url = urlparse(absolute_url)
             # Reconstruct the URL without the fragment
             defragmented_url = parsed_url._replace(fragment="").geturl()
-            for link in disallowed_links:
-                if link not in defragmented_url:
-                    self.page_links.append(defragmented_url)
-            else: 
-                continue
+            is_valid = True
+            for disallowed_link in disallowed_links:
+                if disallowed_link in defragmented_url and defragmented_url not in allowed_links:
+                    is_valid = False
+            if is_valid:
+                self.page_links.append(link)
         return self.page_links
 
     def get_politeness_information(self) -> dict:
