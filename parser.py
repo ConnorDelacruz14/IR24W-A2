@@ -85,7 +85,7 @@ class Parser:
                 if str(bare_url) not in self.URL_counter:
                     Parser.URL_counter[str(bare_url)] = 1
                 else:
-                    Parser.URL_counter[str(bare_url)] = 1
+                    Parser.URL_counter[str(bare_url)] += 1
 
                 if Parser.URL_counter[str(bare_url)] < 3:
                     self.page_links.append(bare_url)
