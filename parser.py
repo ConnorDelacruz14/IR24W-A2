@@ -1,7 +1,9 @@
 import tokenizer
-import re
+import re, requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
+
+SIMILARITY_THRESHOLD = 0.95
 
 
 class Parser:
@@ -11,6 +13,8 @@ class Parser:
     all_frequencies = {}  # all frequencies of words ignoring english stopwords
     longest_page = ("", 0)  # {"URL": total_words}
     subdomains = {}  # {"http://vision.ics.uci.edu": 10}
+    URL_Counter = {}
+    
 
     def __init__(self, url: str, content: str) -> None:
         Parser.pages_parsed += 1
@@ -21,6 +25,7 @@ class Parser:
         self.tokens = []
 
     def get_links_from_webpage(self) -> list:
+        ic_list = []
         for link in self.soup.find_all('a', href=True):
             href = link.get('href')
             # Create an absolute URL from a possible relative URL and the base URL
@@ -28,8 +33,29 @@ class Parser:
             parsed_url = urlparse(absolute_url)
             # Reconstruct the URL without the fragment
             defragmented_url = parsed_url._replace(fragment="").geturl()
-            self.page_links.append(defragmented_url)
+            
+            if str(defragmented_url) not in self.URL_Counter:
+                Parser.URL_Counter[str(defragmented_url)] = 1
+            else:
+                Parser.URL_Counter[str(defragmented_url)] = 1
 
+            if Parser.URL_Counter[str(defragmented_url)] < 3:
+                self.page_links.append(defragmented_url)
+
+
+
+                # we need a way to get all the text
+                #req = requests.get(defragmented_url, verify=False)
+                #bs = BeautifulSoup(req.content, 'html.parser')
+                #df_text = bs.get_text()
+                #proportion = tokenizer.intersection(self.soup.get_text(), df_text)
+                
+                #print(f'proportion is {proportion}')
+                #if proportion < SIMILARITY_THRESHOLD:
+                 #   ic_list.append((defragmented_url, df_text))
+                  #  self.page_links.append(defragmented_url)
+
+        #return tokenizer.internal_comparison(ic_list)
         return self.page_links
 
     def tokenize_web_text(self) -> list:
