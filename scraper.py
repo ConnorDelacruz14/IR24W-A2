@@ -22,17 +22,28 @@ def extract_next_links(url, resp):
     # resp.raw_response.url: the url, again resp.raw_response.content: the content of the page! Return a list with
     # the hyperlinks (as strings) scrapped from resp.raw_response.content
     if resp.status != 200:
-        print(f"Error code {resp.status}")
         return list()
 
     extractor = Parser(url, resp.raw_response.content)
     page_tokens = extractor.tokenize_web_text()
     if (len(page_tokens)) < 100:
         return list()
-    
+
     Parser.all_tokens.extend(page_tokens)
+
     extractor.update_unique_pages()
     extractor.update_subdomain()
+
+    fingerprint_hash = extractor.simhash(page_tokens)
+    print("Fingerprint:", fingerprint_hash)
+    for existing_fingerprint in Parser.fingerprints:
+        distance = extractor.hamming_distance(fingerprint_hash, existing_fingerprint)
+        if 0 <= distance <= 3:
+            print("Fingerprint is too similar to an existing one:",
+                  existing_fingerprint, "with difference of", distance)
+            return list()
+
+    Parser.fingerprints.add(fingerprint_hash)
 
     return extractor.get_links_from_webpage()
 
@@ -55,7 +66,8 @@ def is_valid(url):
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
-            + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf|txt"
+            + r"|txt|ppsx|nb|r"  # we added these
+            + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
             + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
