@@ -8,7 +8,7 @@ ALLOWED_DOMAINS = [
     'informatics.uci.edu',
     'stat.uci.edu'
 ]
-
+SIMILARITY_THRESHOLD = 0.95
 
 def scraper(url, resp):
     return [link for link in extract_next_links(url, resp) if is_valid(link)]
@@ -34,18 +34,52 @@ def extract_next_links(url, resp):
     extractor.update_unique_pages()
     extractor.update_subdomain()
 
-    fingerprint_hash = extractor.simhash(page_tokens)
-    print("Fingerprint:", fingerprint_hash)
+    fingerprint = simhash(extractor.get_word_frequencies())
+    print("Fingerprint:", fingerprint)
     for existing_fingerprint in Parser.fingerprints:
-        distance = extractor.hamming_distance(fingerprint_hash, existing_fingerprint)
-        if 0 <= distance <= 3:
-            print("Fingerprint is too similar to an existing one:",
-                  existing_fingerprint, "with difference of", distance)
+        similarity = simhash_bit_comparison(fingerprint, existing_fingerprint)
+        if similarity >= SIMILARITY_THRESHOLD:
+            print(f"Fingerprint is too similar to an existing one: {existing_fingerprint} "
+                  f"with similarity of {similarity * 100}%")
             return list()
 
-    Parser.fingerprints.add(fingerprint_hash)
+    Parser.fingerprints.add(fingerprint)
 
     return extractor.get_links_from_webpage()
+
+
+def simhash(tokens, max_hash_bits=64):
+    vector_vals = [0] * max_hash_bits
+    for token in tokens:
+        # Generate a basic hash of the token
+        hash_value = 0
+        for char in token:
+            hash_value = (hash_value * 31 + ord(char)) % (2 ** max_hash_bits)
+
+        for i in range(max_hash_bits):
+            bitmask = 1 << i
+            if hash_value & bitmask:
+                vector_vals[i] += 1
+            else:
+                vector_vals[i] -= 1
+
+    # Create the fingerprint
+    fingerprint = 0
+    for i in range(max_hash_bits):
+        if vector_vals[i] >= 0:
+            fingerprint |= (1 << i)
+    return bin(fingerprint)[2:]
+
+
+def simhash_bit_comparison(s1, s2):
+    min_len = min(len(s1), len(s2))
+    max_len = max(len(s1), len(s2))
+    count_similar_bits = 0
+    for i in range(min_len):
+        if s1[i] == s2[i]:
+            count_similar_bits += 1
+
+    return count_similar_bits / max_len
 
 
 def is_valid(url):
@@ -66,7 +100,7 @@ def is_valid(url):
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
-            + r"|txt|ppsx|nb|r"  # we added these
+            + r"|txt|ppsx|nb|r|img|war|json"  # we added these
             + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
             + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"

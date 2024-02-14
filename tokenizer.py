@@ -14,6 +14,8 @@ def tokenize(lines: list) -> list:
     try:
         for line in lines:
             line_tokens = re.findall(r'[a-zA-Z0-9]+', line.lower())
+            if len(tokens) > 10000:
+                return []
             for token in line_tokens:
                 tokens.append(token)
 
