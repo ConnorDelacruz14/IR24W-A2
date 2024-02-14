@@ -32,7 +32,7 @@ def extract_next_links(url, resp):
 
 
 def is_valid(url):
-    # Decide whether to crawl this url or not.
+    # Decide whether to crawl this url or not. 
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
     try:
@@ -43,7 +43,7 @@ def is_valid(url):
         if not domain_matches:
             return False
 
-        if parsed.scheme not in {"http", "https"}:
+        if parsed.scheme not in set(["http", "https"]):
             return False
 
         return not re.match(
@@ -57,5 +57,5 @@ def is_valid(url):
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 
     except TypeError:
-        print("TypeError for ", parsed)
+        print ("TypeError for ", parsed)
         raise
