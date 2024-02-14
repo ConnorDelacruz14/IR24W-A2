@@ -21,6 +21,7 @@ class Parser:
         self.tokens = []
 
     def get_links_from_webpage(self) -> list:
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         disallowed_links = self.get_politeness_information()['Disallow']
         for link in self.soup.find_all('a', href=True):
             href = link.get('href')
@@ -29,8 +30,9 @@ class Parser:
             parsed_url = urlparse(absolute_url)
             # Reconstruct the URL without the fragment
             defragmented_url = parsed_url._replace(fragment="").geturl()
-            if defragmented_url not in disallowed_links:
-                self.page_links.append(defragmented_url)
+            for link in disallowed_links:
+                if link not in defragmented_url:
+                    self.page_links.append(defragmented_url)
             else: 
                 continue
         return self.page_links
@@ -43,7 +45,6 @@ class Parser:
         parsed_url = urlparse(self.url)
         main_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
         if main_url not in Parser.politeness:
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             robot_path = f"{main_url}/robots.txt"
             robot_content = requests.get(robot_path, verify=False).text.split('\n')
             parsed_dict = {'Allow':[], 'Disallow':[], 'Sitemap':''}
@@ -69,4 +70,3 @@ class Parser:
         self.tokens = tokenizer.tokenize([line.strip() for line in page_text.split('\n') if line.strip()],
                                          stopwords=True)
         return self.tokens
-    
