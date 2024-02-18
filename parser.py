@@ -13,7 +13,7 @@ class Parser:
     subdomains = {}  # {"http://vision.ics.uci.edu": 10}
     URL_counter = {}
     fingerprints = set()
-    politeness = {}    # information of robots.txt
+    politeness = {}
 
     def __init__(self, url: str, content: str) -> None:
         Parser.pages_parsed += 1
@@ -24,18 +24,18 @@ class Parser:
         self.tokens = []
 
     def get_politeness_information(self) -> dict:
-        '''
-        Input: none
-        Returns: a dictionary that contains allowed paths, disallowed paths, and the sitemap 
-        '''
+        """
+            Input: none
+            Returns: a dictionary that contains allowed paths, disallowed paths, and the sitemap
+        """
         parsed_url = urlparse(self.url)
         main_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
         if main_url not in Parser.politeness:
             robot_path = "DNE.txt"
-            if main_url.endswith("cs.ics.uci.edu"):
-                robot_path = "./robots/cs.txt"
-            elif main_url.endswith("informatics.uci.edu"):
+            if main_url.endswith("informatics.uci.edu"):
                 robot_path = "./robots/informatics.txt"
+            elif main_url.endswith("cs.ics.uci.edu") or main_url.endswith("cs.uci.edu"):
+                robot_path = "./robots/cs.txt"
             elif main_url.endswith("ics.uci.edu"):
                 robot_path = "./robots/ics.txt"
             elif main_url.endswith("stat.uci.edu"):
@@ -43,7 +43,7 @@ class Parser:
             try:
                 with open(robot_path, "r") as robot_file:
                     robot_content = robot_file.readlines()
-                    parsed_dict = {'Allow':[], 'Disallow':[], 'Sitemap':''}
+                    parsed_dict = {'Allow': [], 'Disallow': [], 'Sitemap': ''}
                     for line in robot_content:
                         parts = line.split(' ')
                         if len(parts) >= 2:
@@ -75,6 +75,7 @@ class Parser:
             parsed_url = urlparse(absolute_url)
             # Reconstruct the URL without the fragment and path
             bare_url = parsed_url._replace(fragment="", query="").geturl()
+            # Check Robots.txt first
             is_allowed = True
             for disallowed_link in disallowed_links:
                 if disallowed_link in bare_url and bare_url not in allowed_links:
@@ -84,7 +85,7 @@ class Parser:
                 if str(bare_url) not in self.URL_counter:
                     Parser.URL_counter[str(bare_url)] = 1
                 else:
-                    Parser.URL_counter[str(bare_url)] = 1
+                    Parser.URL_counter[str(bare_url)] += 1
 
                 if Parser.URL_counter[str(bare_url)] < 3:
                     self.page_links.append(bare_url)
@@ -113,39 +114,6 @@ class Parser:
                 Parser.subdomains[domain] += 1
             else:
                 Parser.subdomains[domain] = 1
-
-    def simple_hash(self, token, hash_bits=64):
-        """A very basic hashing function."""
-        hash = 0
-        for char in token:
-            hash = (hash * 31 + ord(char)) % (2 ** hash_bits)
-        return hash
-
-    def simhash(self, tokens, hash_bits=128):
-        v = [0] * hash_bits
-        for token in tokens:
-            # Generate a basic hash of the token
-            hash = self.simple_hash(token, hash_bits)
-            for i in range(hash_bits):
-                bitmask = 1 << i
-                if hash & bitmask:
-                    v[i] += 1
-                else:
-                    v[i] -= 1
-        # Create the fingerprint
-        fingerprint = 0
-        for i in range(hash_bits):
-            if v[i] >= 0:
-                fingerprint |= (1 << i)
-        return fingerprint
-
-    def hamming_distance(self, f1, f2):
-        x = f1 ^ f2
-        total = 0
-        while x:
-            total += 1
-            x &= x - 1
-        return total
 
     @staticmethod
     def get_all_word_frequencies() -> dict:
