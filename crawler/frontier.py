@@ -1,5 +1,6 @@
 import os
 import shelve
+import time
 
 from threading import Thread, RLock
 from queue import Queue, Empty
@@ -12,7 +13,7 @@ class Frontier(object):
         self.logger = get_logger("FRONTIER")
         self.config = config
         self.to_be_downloaded = list()
-        
+        self.crawl_times = {}
         if not os.path.exists(self.config.save_file) and not restart:
             # Save file does not exist, but request to load save.
             self.logger.info(
@@ -70,3 +71,10 @@ class Frontier(object):
 
         self.save[urlhash] = (url, True)
         self.save.sync()
+
+    def get_last_crawl_time(self, url):
+        # Returns the last time the website is crawled, and if it has not been crawled, returns 0
+        return self.crawl_times.get(url, 0)
+
+    def set_last_crawl_time(self, url, timestamp):
+        self.crawl_times[url] = timestamp
