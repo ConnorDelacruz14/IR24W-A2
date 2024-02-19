@@ -40,24 +40,24 @@ def extract_next_links(url, resp) -> list:
     if (len(page_tokens)) < 100:
         return list()
 
-    Parser.all_tokens.extend(page_tokens)
+    with Parser.lock:
+        Parser.all_tokens.extend(page_tokens)
 
-    extractor.update_unique_pages()
-    extractor.update_subdomain()
+        extractor.update_unique_pages()
+        extractor.update_subdomain()
 
-    # EXTRA CREDIT +2 POINTS
-    # Performs check on similar websites based on their tokens using simhash algorithm from class
-    # Current threshold is stored in SIMILARITY_THRESHOLD global variable
-    fingerprint = simhash(extractor.get_word_frequencies())
-    
-    for existing_fingerprint in Parser.fingerprints:
-        similarity = simhash_bit_comparison(fingerprint, existing_fingerprint)
-        if similarity >= SIMILARITY_THRESHOLD:
-            return list()
+        # EXTRA CREDIT +2 POINTS
+        # Performs check on similar websites based on their tokens using simhash algorithm from class
+        # Current threshold is stored in SIMILARITY_THRESHOLD global variable
+        fingerprint = simhash(extractor.get_word_frequencies())
+        
+        for existing_fingerprint in Parser.fingerprints:
+            similarity = simhash_bit_comparison(fingerprint, existing_fingerprint)
+            if similarity >= SIMILARITY_THRESHOLD:
+                return list()
 
-    Parser.fingerprints.add(fingerprint)
-
-    return extractor.get_links_from_webpage()
+        Parser.fingerprints.add(fingerprint)
+        return extractor.get_links_from_webpage()
 
 
 def simhash(token_dict: dict, max_hash_bits=64) -> str:
