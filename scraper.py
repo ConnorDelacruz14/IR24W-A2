@@ -57,7 +57,7 @@ def extract_next_links(url, resp) -> list:
                 return list()
 
         Parser.fingerprints.add(fingerprint)
-        return extractor.get_links_from_webpage()
+        return extractor.get_links_from_webpage()   
 
 
 def simhash(token_dict: dict, max_hash_bits=64) -> str:
