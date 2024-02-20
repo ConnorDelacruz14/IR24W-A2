@@ -2,7 +2,7 @@ import tokenizer
 import re
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
-
+from threading import Thread, RLock
 
 class Parser:
     """
@@ -18,6 +18,7 @@ class Parser:
     URL_counter = {}
     fingerprints = set() # keep track of each page's fingerprint for simhashing comparisons
     politeness = {}
+    lock = RLock()
 
     def __init__(self, url: str, content: str) -> None:
         Parser.pages_parsed += 1
@@ -26,7 +27,6 @@ class Parser:
         self.page_links = []
         self.soup = BeautifulSoup(self.content, 'html.parser')
         self.tokens = []
-
 
     # EXTRA CREDIT +1 POINTS
     def get_politeness_information(self) -> dict:
