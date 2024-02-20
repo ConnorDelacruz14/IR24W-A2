@@ -48,8 +48,8 @@ def extract_next_links(url, resp) -> list:
     # EXTRA CREDIT +2 POINTS
     # Performs check on similar websites based on their tokens using simhash algorithm from class
     # Current threshold is stored in SIMILARITY_THRESHOLD global variable
-    fingerprint = simhash(extractor.get_word_frequencies())
-    
+    fingerprint = simhash(page_tokens)
+
     for existing_fingerprint in Parser.fingerprints:
         similarity = simhash_bit_comparison(fingerprint, existing_fingerprint)
         if similarity >= SIMILARITY_THRESHOLD:
@@ -60,38 +60,37 @@ def extract_next_links(url, resp) -> list:
     return extractor.get_links_from_webpage()
 
 
-def simhash(token_dict: dict, max_hash_bits=64) -> str:
+def simhash(tokens: list, max_hash_bits=64) -> str:
     """
-        Input: token list and max_hash_bits value 
-        Returns the fingerprint value based 
+        Input: token list and max_hash_bits value
+        Returns the fingerprint value based
     """
-    tokens = token_dict.keys()
     vector_vals = [0] * max_hash_bits  # max length of vector is 64 bits (word length no less than that)
     for token in tokens:
         # Create a basic hash of each token
-        
+
         hash_value = 0
         for char in token:
-            # multiply the hash value by 31, 
-            # add the ASCII value of the character 
-            # modulo the result by 2 to power of max_hash_bits to limit the hash_value 
+            # multiply the hash value by 31,
+            # add the ASCII value of the character
+            # modulo the result by 2 to power of max_hash_bits to limit the hash_value
             hash_value = (hash_value * 31 + ord(char)) % (2 ** max_hash_bits)
-        
-        # generate the vector values 
-        # iterate through every bit and for the current token if the hash bit value is 1 we increase the sum at vector_vals by 1 else decrease by 1
-        for i in range(max_hash_bits):
-            bitmask = 1 << i  
-            if hash_value & bitmask:
-                vector_vals[i] += token_dict[token]
-            else:
-                vector_vals[i] -= token_dict[token]
 
-    # Create the fingerprint for indentifying a webpage
-    # If the ith component of the vector is positive, the fingeprint's ith bit is set to 1
+        # generate the vector values iterate through every bit and for the current token if the hash bit value is 1
+        # we increase the sum at vector_vals by 1 else decrease by 1
+        for i in range(max_hash_bits):
+            bitmask = 1 << i
+            if hash_value & bitmask:
+                vector_vals[i] += 1
+            else:
+                vector_vals[i] -= 1
+
+    # Create the fingerprint for identifying a webpage
+    # If the ith component of the vector is positive, the fingerprint's ith bit is set to 1
     # otherwise it remains 0
     fingerprint = 0
     for i in range(max_hash_bits):
-        if vector_vals[i] >= 0: 
+        if vector_vals[i] >= 0:
             fingerprint |= (1 << i)
 
     return bin(fingerprint)[2:]  # bin() returns a string "0b....." -> slicing gets rid of that
@@ -99,13 +98,13 @@ def simhash(token_dict: dict, max_hash_bits=64) -> str:
 
 def simhash_bit_comparison(s1: str, s2: str) -> float:
     """
-        Input: binary strings 
+        Input: binary strings
         Returns the percentage of similar bits between the binary numbers.
     """
     min_len = min(len(s1), len(s2))
     max_len = max(len(s1), len(s2))
     count_similar_bits = 0
-    
+
     # Count the number of bits that are the same for the binary strings
     for i in range(min_len):
         if s1[i] == s2[i]:
@@ -116,7 +115,7 @@ def simhash_bit_comparison(s1: str, s2: str) -> float:
 
 
 def is_valid(url):
-    # Decide whether to crawl this url or not. 
+    # Decide whether to crawl this url or not.
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
     try:
@@ -143,5 +142,5 @@ def is_valid(url):
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 
     except TypeError:
-        print ("TypeError for ", parsed)
+        print("TypeError for ", parsed)
         raise
