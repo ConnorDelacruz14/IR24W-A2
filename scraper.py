@@ -62,8 +62,8 @@ def extract_next_links(url, resp) -> list:
 
 def simhash(tokens: list, max_hash_bits=64) -> str:
     """
-        Input: token list and max_hash_bits value 
-        Returns the fingerprint value based 
+        Input: token list and max_hash_bits value
+        Returns the fingerprint value based
     """
     vector_vals = [0] * max_hash_bits  # max length of vector is 64 bits (word length no less than that)
     for token in tokens:
@@ -71,9 +71,9 @@ def simhash(tokens: list, max_hash_bits=64) -> str:
 
         hash_value = 0
         for char in token:
-            # multiply the hash value by 31, 
-            # add the ASCII value of the character 
-            # modulo the result by 2 to power of max_hash_bits to limit the hash_value 
+            # multiply the hash value by 31,
+            # add the ASCII value of the character
+            # modulo the result by 2 to power of max_hash_bits to limit the hash_value
             hash_value = (hash_value * 31 + ord(char)) % (2 ** max_hash_bits)
 
         # generate the vector values iterate through every bit and for the current token if the hash bit value is 1
@@ -98,7 +98,7 @@ def simhash(tokens: list, max_hash_bits=64) -> str:
 
 def simhash_bit_comparison(s1: str, s2: str) -> float:
     """
-        Input: binary strings 
+        Input: binary strings
         Returns the percentage of similar bits between the binary numbers.
     """
     min_len = min(len(s1), len(s2))
@@ -115,7 +115,7 @@ def simhash_bit_comparison(s1: str, s2: str) -> float:
 
 
 def is_valid(url):
-    # Decide whether to crawl this url or not. 
+    # Decide whether to crawl this url or not.
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
     try:
